@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bander's Blog</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Mono:wght@300;400&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #fafaf8;
+    --bg2: #f4f3f0;
+    --bg3: #eceae5;
+    --text: #1a1916;
+    --muted: #8a877f;
+    --accent: #b5813a;
+    --accent2: #3a7eb5;
+    --border: rgba(0,0,0,0.08);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 18px;
+    line-height: 1.7;
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  /* 光标 */
+  .cursor {
+    width: 8px; height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+    position: fixed;
+    top: 0; left: 0;
+    pointer-events: none;
+    z-index: 9999;
+    transition: transform 0.15s ease;
+  }
+
+  .cursor-ring {
+    width: 36px; height: 36px;
+    border: 1px solid var(--accent);
+    border-radius: 50%;
+    position: fixed;
+    top: 0; left: 0;
+    pointer-events: none;
+    z-index: 9998;
+    transition: all 0.12s ease;
+    opacity: 0.4;
+  }
+
+  /* 导航 */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 50;
+    padding: 28px 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: all 0.4s;
+  }
+
+  nav.scrolled {
+    background: rgba(250,250,248,0.94);
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(12px);
+    padding: 18px 60px;
+  }
+
+  .nav-logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 14px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text);
+    text-decoration: none;
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 40px;
+    list-style: none;
+  }
+
+  .nav-links a {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.3s;
+  }
+
+  .nav-links a:hover { color: var(--text); }
+
+  /* 英雄区 */
+  .hero {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-left {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 0 60px 80px;
+    background: var(--bg);
+  }
+
+  .hero-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 24px;
+    opacity: 0;
+    animation: fadeUp 0.8s 0.2s forwards;
+  }
+
+  .hero-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(52px, 7vw, 96px);
+    font-weight: 300;
+    line-height: 1.0;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    opacity: 0;
+    animation: fadeUp 0.8s 0.4s forwards;
+  }
+
+  .hero-title em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .hero-desc {
+    margin-top: 32px;
+    font-size: 16px;
+    color: var(--muted);
+    max-width: 380px;
+    line-height: 1.8;
+    opacity: 0;
+    animation: fadeUp 0.8s 0.6s forwards;
+  }
+
+  .hero-cta {
+    margin-top: 48px;
+    display: flex;
+    gap: 24px;
+    align-items: center;
+    opacity: 0;
+    animation: fadeUp 0.8s 0.8s forwards;
+  }
+
+  .btn-primary {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #fff;
+    background: var(--text);
+    padding: 14px 32px;
+    text-decoration: none;
+    transition: all 0.3s;
+  }
+
+  .btn-primary:hover {
+    background: var(--accent);
+    transform: translateY(-2px);
+  }
+
+  .btn-secondary {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.3s;
+  }
+
+  .btn-secondary:hover { color: var(--accent); }
+
+  .hero-right {
+    position: relative;
+    overflow: hidden;
+    background: var(--bg2);
+  }
+
+  .hero-right::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to right, var(--bg) 0%, transparent 20%);
+  }
+
+  .hero-visual {
+    width: 100%; height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .hero-big-text {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 180px;
+    letter-spacing: -0.08em;
+    color: var(--bg3);
+    line-height: 1;
+    user-select: none;
+  }
+
+  .hero-counter {
+    position: absolute;
+    bottom: 80px;
+    right: 50px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    writing-mode: vertical-rl;
+    z-index: 2;
+  }
+
+  /* 跑马灯 */
+  .marquee-wrap {
+    overflow: hidden;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 0;
+    background: var(--bg2);
+  }
+
+  .marquee-track {
+    display: flex;
+    gap: 0;
+    animation: marquee 20s linear infinite;
+    white-space: nowrap;
+  }
+
+  .marquee-item {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 0 40px;
+    flex-shrink: 0;
+  }
+
+  .marquee-dot {
+    color: var(--accent);
+    padding: 0 4px;
+  }
+
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+
+  /* 分类 */
+  .categories {
+    padding: 50px 60px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    gap: 0;
+    overflow-x: auto;
+  }
+
+  .cat-item {
+    flex-shrink: 0;
+    padding: 14px 40px;
+    border-right: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+
+  .cat-item:first-child { padding-left: 0; }
+
+  .cat-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    display: block;
+    margin-bottom: 4px;
+    transition: color 0.3s;
+  }
+
+  .cat-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text);
+    transition: color 0.3s;
+  }
+
+  .cat-item.active .cat-num,
+  .cat-item.active .cat-name { color: var(--accent); }
+
+  .cat-item:hover .cat-name { color: var(--accent); }
+
+  /* 文章区 */
+  .posts { padding: 80px 60px; }
+
+  .section-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 60px;
+  }
+
+  .section-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 42px;
+    font-weight: 300;
+    letter-spacing: -0.02em;
+    color: var(--text);
+  }
+
+  .section-title em { font-style: italic; color: var(--accent); }
+
+  .section-link {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.3s;
+  }
+
+  .section-link:hover { color: var(--accent); }
+
+  .posts-grid {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr 1fr;
+    grid-template-rows: auto auto;
+    gap: 2px;
+    background: var(--border);
+  }
+
+  .post-card {
+    background: var(--bg);
+    overflow: hidden;
+    position: relative;
+    cursor: pointer;
+  }
+
+  .post-card.featured { grid-row: span 2; }
+
+  .post-img {
+    width: 100%;
+    overflow: hidden;
+  }
+
+  .post-card.featured .post-img { height: 320px; }
+  .post-card:not(.featured) .post-img { height: 160px; }
+
+  .post-img-inner {
+    width: 100%; height: 100%;
+    transition: transform 0.6s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 52px;
+  }
+
+  .post-card.featured .post-img-inner { font-size: 80px; }
+
+  .post-card:hover .post-img-inner { transform: scale(1.04); }
+
+  .bg-photo { background: #f0ece4; }
+  .bg-tech  { background: #e4ecf0; }
+  .bg-art   { background: #ece4f0; }
+  .bg-life  { background: #e4f0e8; }
+
+  .post-body { padding: 24px 28px 28px; }
+
+  .post-meta {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 10px;
+  }
+
+  .post-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    padding: 2px 7px;
+  }
+
+  .post-date {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+  }
+
+  .post-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 400;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+    color: var(--text);
+    transition: color 0.3s;
+  }
+
+  .post-card.featured .post-title { font-size: 26px; }
+  .post-card:not(.featured) .post-title { font-size: 18px; }
+  .post-card:hover .post-title { color: var(--accent); }
+
+  .post-excerpt {
+    margin-top: 12px;
+    font-size: 15px;
+    color: var(--muted);
+    line-height: 1.8;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .post-card:not(.featured) .post-excerpt { display: none; }
+
+  .post-read {
+    margin-top: 20px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: color 0.3s, gap 0.3s;
+  }
+
+  .post-card:not(.featured) .post-read { display: none; }
+  .post-card:hover .post-read { color: var(--accent); gap: 14px; }
+
+  /* 关于 */
+  .about {
+    padding: 100px 60px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 100px;
+    border-top: 1px solid var(--border);
+    align-items: center;
+    background: var(--bg2);
+  }
+
+  .about-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent2);
+    margin-bottom: 24px;
+  }
+
+  .about-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 48px;
+    font-weight: 300;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    margin-bottom: 28px;
+  }
+
+  .about-title em { font-style: italic; color: var(--accent); }
+
+  .about-text {
+    font-size: 17px;
+    color: var(--muted);
+    line-height: 1.9;
+    margin-bottom: 20px;
+  }
+
+  .about-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+    margin-top: 40px;
+  }
+
+  .stat {
+    background: var(--bg2);
+    padding: 24px;
+  }
+
+  .stat-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 36px;
+    font-weight: 300;
+    color: var(--accent);
+    line-height: 1;
+    display: block;
+  }
+
+  .stat-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-top: 6px;
+    display: block;
+  }
+
+  .about-right { position: relative; }
+
+  .about-img-frame {
+    width: 100%;
+    aspect-ratio: 3/4;
+    background: var(--bg3);
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+
+  .about-img-frame::after {
+    content: 'BANDER';
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 72px;
+    letter-spacing: -0.05em;
+    color: rgba(0,0,0,0.04);
+    position: absolute;
+    bottom: 40px;
+    left: 30px;
+  }
+
+  .about-img-center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 80px;
+    opacity: 0.3;
+  }
+
+  /* 页脚 */
+  footer {
+    padding: 50px 60px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg);
+  }
+
+  .footer-logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 13px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .footer-copy {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+  }
+
+  .footer-links {
+    display: flex;
+    gap: 28px;
+    list-style: none;
+  }
+
+  .footer-links a {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.3s;
+  }
+
+  .footer-links a:hover { color: var(--accent); }
+
+  /* 动画 */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .reveal {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+  }
+
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  @media (max-width: 900px) {
+    nav { padding: 20px 24px; }
+    nav.scrolled { padding: 16px 24px; }
+    .hero { grid-template-columns: 1fr; }
+    .hero-right { display: none; }
+    .hero-left { padding: 120px 24px 60px; }
+    .categories { padding: 32px 24px; }
+    .posts { padding: 60px 24px; }
+    .posts-grid { grid-template-columns: 1fr; }
+    .post-card.featured { grid-row: span 1; }
+    .about { grid-template-columns: 1fr; padding: 60px 24px; gap: 40px; }
+    .about-right { display: none; }
+    footer { padding: 32px 24px; flex-direction: column; gap: 16px; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<nav id="nav">
+  <a href="#" class="nav-logo">Bander's Blog</a>
+  <ul class="nav-links">
+    <li><a href="#posts">文章</a></li>
+    <li><a href="#about">关于</a></li>
+    <li><a href="#">摄影</a></li>
+    <li><a href="#">科技</a></li>
+    <li><a href="#">艺术</a></li>
+  </ul>
+</nav>
+
+<!-- 英雄区 -->
+<section class="hero">
+  <div class="hero-left">
+    <p class="hero-tag">— Photography · Technology · Art</p>
+    <h1 class="hero-title">
+      用镜头<br>
+      <em>记录</em><br>
+      这个世界
+    </h1>
+    <p class="hero-desc">摄影、科技与艺术的交汇之处。<br>这里是 Bander 的创作日志。</p>
+    <div class="hero-cta">
+      <a href="#posts" class="btn-primary">开始阅读</a>
+      <a href="#about" class="btn-secondary">了解我 →</a>
+    </div>
+  </div>
+  <div class="hero-right">
+    <div class="hero-visual">
+      <div class="hero-big-text">B</div>
+    </div>
+    <div class="hero-counter">bander.asia — 2025</div>
+  </div>
+</section>
+
+<!-- 跑马灯 -->
+<div class="marquee-wrap reveal">
+  <div class="marquee-track">
+    <span class="marquee-item">Photography</span><span class="marquee-dot">·</span>
+    <span class="marquee-item">摄影</span><span class="marquee-dot">·</span>
+    <span class="marquee-item">Technology</span><span class="marquee-dot">·</span>
+    <span class="marquee-item">科技</span><span class="marquee-dot">·</span>
+    <span class="marquee-item">Art</span><span class="marquee-dot">·</span>
+    <span class="marquee-item">艺术</span><span class="marquee-dot">·</span>
+    <span class="marquee-item">bander.asia</span><span class="marquee-dot">·</span>
+    <span class="marquee-item">Photography</span><span class="marquee-dot">·</span>
+    <span class="marquee-item">摄影</span><span class="marquee-dot">·</span>
+    <span class="marquee-item">Technology</span><span class="marquee-dot">·</span>
+    <span class="marquee-item">科技</span><span class="marquee-dot">·</span>
+    <span class="marquee-item">Art</span><span class="marquee-dot">·</span>
+    <span class="marquee-item">艺术</span><span class="marquee-dot">·</span>
+    <span class="marquee-item">bander.asia</span><span class="marquee-dot">·</span>
+  </div>
+</div>
+
+<!-- 分类 -->
+<div class="categories reveal">
+  <div class="cat-item active">
+    <span class="cat-num">01</span>
+    <span class="cat-name">全部</span>
+  </div>
+  <div class="cat-item">
+    <span class="cat-num">02</span>
+    <span class="cat-name">摄影</span>
+  </div>
+  <div class="cat-item">
+    <span class="cat-num">03</span>
+    <span class="cat-name">科技</span>
+  </div>
+  <div class="cat-item">
+    <span class="cat-num">04</span>
+    <span class="cat-name">艺术</span>
+  </div>
+  <div class="cat-item">
+    <span class="cat-num">05</span>
+    <span class="cat-name">随笔</span>
+  </div>
+</div>
+
+<!-- 文章 -->
+<section class="posts" id="posts">
+  <div class="section-header reveal">
+    <h2 class="section-title">最新<em>文章</em></h2>
+    <a href="#" class="section-link">查看全部 →</a>
+  </div>
+
+  <div class="posts-grid">
+    <div class="post-card featured reveal">
+      <div class="post-img">
+        <div class="post-img-inner bg-photo">📷</div>
+      </div>
+      <div class="post-body">
+        <div class="post-meta">
+          <span class="post-tag">摄影</span>
+          <span class="post-date">2025.03.15</span>
+        </div>
+        <h3 class="post-title">在东京街头，寻找光与影的边界</h3>
+        <p class="post-excerpt">凌晨三点的新宿，霓虹灯把雨后的柏油路染成了调色盘。我端着相机，试图在这座不眠城市里，捕捉那一瞬间属于我的画面……</p>
+        <span class="post-read">阅读全文 →</span>
+      </div>
+    </div>
+
+    <div class="post-card reveal">
+      <div class="post-img">
+        <div class="post-img-inner bg-tech">💻</div>
+      </div>
+      <div class="post-body">
+        <div class="post-meta">
+          <span class="post-tag">科技</span>
+          <span class="post-date">2025.03.08</span>
+        </div>
+        <h3 class="post-title">Apple Watch Ultra 2：一个摄影师的使用报告</h3>
+      </div>
+    </div>
+
+    <div class="post-card reveal">
+      <div class="post-img">
+        <div class="post-img-inner bg-art">🎨</div>
+      </div>
+      <div class="post-body">
+        <div class="post-meta">
+          <span class="post-tag">艺术</span>
+          <span class="post-date">2025.02.22</span>
+        </div>
+        <h3 class="post-title">当 AI 开始作画：艺术的边界在哪里？</h3>
+      </div>
+    </div>
+
+    <div class="post-card reveal">
+      <div class="post-img">
+        <div class="post-img-inner bg-photo">🌅</div>
+      </div>
+      <div class="post-body">
+        <div class="post-meta">
+          <span class="post-tag">摄影</span>
+          <span class="post-date">2025.02.10</span>
+        </div>
+        <h3 class="post-title">胶片复兴：为什么年轻人开始拍胶卷</h3>
+      </div>
+    </div>
+
+    <div class="post-card reveal">
+      <div class="post-img">
+        <div class="post-img-inner bg-tech">⌚</div>
+      </div>
+      <div class="post-body">
+        <div class="post-meta">
+          <span class="post-tag">科技</span>
+          <span class="post-date">2025.01.30</span>
+        </div>
+        <h3 class="post-title">用 SwiftUI 开发我的第一个 App</h3>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 关于 -->
+<section class="about" id="about">
+  <div class="about-left reveal">
+    <p class="about-label">— About Bander</p>
+    <h2 class="about-title">我是一个<br><em>创作者</em></h2>
+    <p class="about-text">热爱摄影、科技与艺术。用相机记录生活，用代码构建想法，用文字分享感受。</p>
+    <p class="about-text">这个博客是我的创作日志，也是与世界对话的方式。</p>
+    <div class="about-stats">
+      <div class="stat">
+        <span class="stat-num">48</span>
+        <span class="stat-label">篇文章</span>
+      </div>
+      <div class="stat">
+        <span class="stat-num">3</span>
+        <span class="stat-label">个分类</span>
+      </div>
+      <div class="stat">
+        <span class="stat-num">∞</span>
+        <span class="stat-label">个想法</span>
+      </div>
+    </div>
+  </div>
+  <div class="about-right reveal">
+    <div class="about-img-frame">
+      <div class="about-img-center">📷</div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <span class="footer-logo">Bander's Blog</span>
+  <span class="footer-copy">© 2025 bander.asia · All rights reserved</span>
+  <ul class="footer-links">
+    <li><a href="#">Instagram</a></li>
+    <li><a href="#">Twitter</a></li>
+    <li><a href="#">GitHub</a></li>
+  </ul>
+</footer>
+
+<script>
+  const cursor = document.getElementById('cursor');
+  const ring = document.getElementById('cursorRing');
+  let mx = 0, my = 0, rx = 0, ry = 0;
+
+  document.addEventListener('mousemove', e => {
+    mx = e.clientX; my = e.clientY;
+    cursor.style.left = mx - 4 + 'px';
+    cursor.style.top = my - 4 + 'px';
+  });
+
+  function animateRing() {
+    rx += (mx - rx - 18) * 0.12;
+    ry += (my - ry - 18) * 0.12;
+    ring.style.left = rx + 'px';
+    ring.style.top = ry + 'px';
+    requestAnimationFrame(animateRing);
+  }
+  animateRing();
+
+  document.querySelectorAll('a, button, .post-card, .cat-item').forEach(el => {
+    el.addEventListener('mouseenter', () => {
+      cursor.style.transform = 'scale(2.5)';
+      ring.style.transform = 'scale(1.5)';
+      ring.style.opacity = '0.2';
+    });
+    el.addEventListener('mouseleave', () => {
+      cursor.style.transform = 'scale(1)';
+      ring.style.transform = 'scale(1)';
+      ring.style.opacity = '0.4';
+    });
+  });
+
+  window.addEventListener('scroll', () => {
+    document.getElementById('nav').classList.toggle('scrolled', window.scrollY > 40);
+  });
+
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach((entry, i) => {
+      if (entry.isIntersecting) {
+        setTimeout(() => entry.target.classList.add('visible'), i * 80);
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+  document.querySelectorAll('.cat-item').forEach(item => {
+    item.addEventListener('click', () => {
+      document.querySelectorAll('.cat-item').forEach(i => i.classList.remove('active'));
+      item.classList.add('active');
+    });
+  });
+</script>
+</body>
+</html>
